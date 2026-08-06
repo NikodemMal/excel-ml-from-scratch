@@ -34,6 +34,16 @@ Projekty 02, 04 i 05 raportują dopasowanie **na tych samych danych, na których
 
 **To najmocniejszy projekt w zestawie** — jako jedyny mierzy to, co naprawdę ma znaczenie.
 
+![Przepływ obliczeń w sieci: suma ważona, normalizacja, sigmoida, wyjście, błąd, predykcja](obrazy/siec-1-warstwa-propagacja.png)
+
+*Pełna ścieżka obliczeń dla kilku rekordów: ważona suma trzech neuronów → normalizacja min-max → aktywacja sigmoidalna → warstwa wyjściowa → błąd kwadratowy → predykcja klasy → trafienie (0 = poprawnie).*
+
+![Wagi warstwy wyjściowej oraz podsumowanie: suma błędów, próg odcięcia i liczba pomyłek](obrazy/siec-1-warstwa-wagi-i-wynik.png)
+
+*Wagi warstwy wyjściowej i podsumowanie. `Suma błędów 199,853` dotyczy zbioru uczącego (500 rekordów), a `pomyłki 5` — wstrzymanego zbioru testowego (183 rekordy).*
+
+> ⚠️ Liczby `317` i `183` w wierszu „liczba" to **liczebność klas 2 i 4 wewnątrz zbioru uczącego** (317 + 183 = 500), a nie podział na zbiór uczący i testowy. To, że zbiór testowy również liczy 183 rekordy, jest przypadkiem.
+
 ## 02 · Liniowa analiza dyskryminacyjna (Iris)
 
 **Dane:** klasyczny zbiór Iris — 150 rekordów, 4 cechy, 3 gatunki po 50 rekordów.
@@ -44,6 +54,10 @@ Projekty 02, 04 i 05 raportują dopasowanie **na tych samych danych, na których
 
 **Ograniczenie:** ocena na danych uczących, bez walidacji krzyżowej.
 
+![Wagi dyskryminanty, progi odcięcia i rozbicie wariancji na międzygrupową i wewnątrzgrupową](obrazy/lda-iris-metryki.png)
+
+*Wagi dyskryminanty, średnie rzutowania w każdej klasie, progi odcięcia oraz rozbicie wariancji: międzygrupowa 0,522, wewnątrzgrupowa 0,808, stosunek **0,645**. `Różnica = 2` to liczba błędnych klasyfikacji na 150 rekordów.*
+
 ## 03 · Grupowanie metodą k-średnich
 
 **Dane:** 50 obiektów, 4 cechy dotyczące przestępczości i urbanizacji. Charakterystyka odpowiada zbiorowi *USArrests* (stany USA); etykiety zanonimizowano do `L1`–`L50`.
@@ -53,6 +67,10 @@ Projekty 02, 04 i 05 raportują dopasowanie **na tych samych danych, na których
 **Zbieżność:** kolumna „różnica" porównuje przypisanie z poprzednią iteracją. Liczba zmian: **4 → 4 → 2 → 0 → 0**. Algorytm ustabilizował się w piątej iteracji, szósta to potwierdzenie.
 
 Ten projekt najlepiej pokazuje mechanikę algorytmu, bo nic nie dzieje się „w środku funkcji" — każdy krok iteracji jest osobną, widoczną tabelą.
+
+![Piąta iteracja k-średnich: centroidy, odległości, przypisania i zerowa suma różnic](obrazy/k-srednich-zbieznosc.png)
+
+*Iteracja piąta. Po lewej centroidy czterech skupień, po prawej odległości każdego obiektu do wszystkich centroidów i wynikające z nich przypisanie. Kolumna `różnica` porównuje przypisanie z poprzednią iteracją — **`Konwergencja = 0`** oznacza, że żaden z 50 obiektów nie zmienił skupienia i algorytm się zatrzymał.*
 
 ## 04 · Sieć neuronowa z dwiema warstwami ukrytymi
 
@@ -73,6 +91,14 @@ Ten projekt najlepiej pokazuje mechanikę algorytmu, bo nic nie dzieje się „w
 **Diagnostyka:** obok, dla porównania, pełny blok `LINEST` — błędy standardowe współczynników (1,592 i 52,642), **R² = 0,758**, statystyka F = 18,82 przy 6 stopniach swobody, rozkład sumy kwadratów na wyjaśnioną (1760,8) i resztową (561,3).
 
 **Ograniczenie:** osiem punktów to zdecydowanie za mało, by traktować te przedziały ufności poważnie. Projekt pokazuje wyprowadzenie i odczyt diagnostyki, nie wnioskowanie.
+
+![Wykres punktowy ośmiu obserwacji: temperatura a sprzedaż](obrazy/regresja-wykres.png)
+
+*Osiem obserwacji — temperatura na osi poziomej, sprzedaż na pionowej.*
+
+![Sumy do równań normalnych, wyliczone współczynniki, predykcje oraz blok LINEST](obrazy/regresja-linest.png)
+
+*U góry sumy potrzebne do równań normalnych i wyliczone z nich współczynniki (`a = 6,906`, `b = −130,236`) wraz z trzema predykcjami. Na dole blok `LINEST` do porównania: błędy standardowe współczynników (1,592 i 52,642), **R² = 0,758**, statystyka F = 18,82 przy 6 stopniach swobody oraz rozkład sumy kwadratów na wyjaśnioną (1760,8) i resztową (561,3).*
 
 ---
 
