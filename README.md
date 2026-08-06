@@ -1,137 +1,107 @@
-# Uczenie maszynowe od zera w Excelu
+# ML w Excelu, bez bibliotek
 
-Pięć algorytmów uczenia maszynowego policzonych **wyłącznie na formułach arkusza** - bez Pythona, bez bibliotek, bez `model.fit()`. Propagacja przez warstwy sieci, normalizacja, liczenie odległości euklidesowych, dopasowanie metodą najmniejszych kwadratów - każdy krok jest widoczny w komórce i można go prześledzić.
+Pięć algorytmów policzonych formułami w arkuszu. Bez Pythona, bez sklearn, bez `model.fit()`. Każdy krok - propagacja przez warstwy, normalizacja, odległości, dopasowanie prostej - siedzi w komórce i da się go prześledzić.
 
-To projekty z okresu studiów. Wrzucam je publicznie, bo pokazują coś, czego nie widać w notatniku wywołującym `sklearn`: **że rozumiem, co te algorytmy liczą w środku.**
+Robiłem to na studiach. Wrzucam, bo w arkuszu nie da się schować za wywołaniem funkcji.
 
-*[English version below](#machine-learning-from-scratch-in-excel)*
+[English below](#ml-in-excel-no-libraries)
 
-## Wyniki
+| # | Projekt | Dane | Wynik |
+|---|---|---|---|
+| [01](01-siec-1-warstwa) | Sieć, 1 warstwa ukryta | 683 rekordy, 9 cech, 2 klasy | 5 pomyłek na 183 testowych (97,3%) |
+| [02](02-lda-iris) | LDA | Iris, 150 rekordów | 2 pomyłki na 150 |
+| [03](03-k-srednich) | k-średnich | 50 obiektów, 4 cechy | zbieżność w 5 iteracji |
+| [04](04-siec-2-warstwy) | Sieć, 2 warstwy ukryte | 172 rekordy, 3 klasy | 48 pomyłek na 172 |
+| [05](05-regresja-liniowa) | Regresja liniowa | 8 punktów | R² = 0,758 |
 
-| # | Projekt | Dane | Metoda | Wynik |
-|---|---|---|---|---|
-| [01](01-siec-1-warstwa) | Sieć neuronowa, 1 warstwa ukryta | 683 rekordy, 9 cech, 2 klasy | 3 neurony, sigmoida, normalizacja min-max | **97,3% na zbiorze testowym** (5 błędów / 183) |
-| [02](02-lda-iris) | Liniowa analiza dyskryminacyjna | Iris - 150 rekordów, 4 cechy, 3 klasy | LDA Fishera | 98,7% (2 błędy / 150) |
-| [03](03-k-srednich) | Grupowanie k-średnich | 50 obiektów, 4 cechy | k = 4, iteracje Lloyda | zbieżność w 5. iteracji |
-| [04](04-siec-2-warstwy) | Sieć neuronowa, 2 warstwy ukryte | 172 rekordy, 4 cechy, 3 klasy | 3 + 3 neurony, sigmoida | 72,1% (48 błędów / 172) |
-| [05](05-regresja-liniowa) | Regresja liniowa | 8 punktów, 1 zmienna | MNK z formuł + diagnostyka | R² = 0,758 |
+Tylko w projekcie 01 wydzieliłem zbiór testowy. Reszta liczy skuteczność na tych samych danych, na których dobierałem parametry, więc te wyniki są zawyżone. Zostawiam je tak, jak powstały - dziś rozdzieliłbym dane wszędzie.
 
-### Jak czytać te wyniki
+## 01. Sieć z jedną warstwą ukrytą
 
-**Tylko projekt 01 ma prawdziwy podział na zbiór uczący i testowy.** Model dopasowano na 500 rekordach, a 97,3% to skuteczność na 183 rekordach, których optymalizacja nigdy nie widziała.
+683 rekordy, 9 cech w skali 1-10, dwie klasy. Dane wyglądają na Breast Cancer Wisconsin z UCI.
 
-Projekty 02, 04 i 05 raportują dopasowanie **na tych samych danych, na których je uczono**. Te liczby są więc optymistyczne i nie mówią nic o zdolności do generalizacji. Zostawiam je takimi, jakie były - z zaznaczeniem, że dziś rozdzieliłbym dane przed dopasowaniem w każdym z nich, tak jak zrobiłem to w projekcie 01.
+9 wejść, 3 neurony ukryte, sigmoida, wyjście przez `MMULT`. Próg decyzyjny to średnia ważona średnich wyjścia w obu klasach. Wagi dobierał Solver.
 
----
+Uczyłem na wierszach 11-510, a 511-693 zostawiłem na test i podczas dopasowania ich nie ruszałem. Na tych 183 wierszach wyszło 5 pomyłek.
 
-## 01 · Sieć neuronowa z jedną warstwą ukrytą
+![Ścieżka obliczeń w sieci](obrazy/siec-1-warstwa-propagacja.png)
 
-**Dane:** 683 rekordy, 9 cech w skali 1-10, dwie klasy (2 i 4). Charakterystyka odpowiada zbiorowi *Breast Cancer Wisconsin (Original)* z repozytorium UCI.
+Cała ścieżka dla kilku rekordów: suma ważona, normalizacja, sigmoida, wyjście, błąd, predykcja, trafienie.
 
-**Architektura:** 9 wejść → 3 neurony ukryte → 1 wyjście. Suma ważona liczona przez `SUMPRODUCT` z `INDEX`, normalizacja min-max, aktywacja sigmoidalna `1/(1+EXP(-x))`, warstwa wyjściowa przez `MMULT`. Próg decyzyjny wyznaczony jako średnia ważona średnich wyjścia w obu klasach.
+![Wagi i podsumowanie](obrazy/siec-1-warstwa-wagi-i-wynik.png)
 
-**Ewaluacja:** wiersze 11-510 to zbiór uczący (suma kwadratów błędów = 199,85, minimalizowana przez Solver). Wiersze 511-693 to **zbiór testowy, nieużywany podczas dopasowania** - 5 błędnych klasyfikacji na 183 rekordy.
+Suma błędów 199,853 dotyczy zbioru uczącego, pomyłki 5 - testowego.
 
-**To najmocniejszy projekt w zestawie** - jako jedyny mierzy to, co naprawdę ma znaczenie.
+Uwaga na `317` i `183` w wierszu „liczba": to liczebność obu klas wewnątrz zbioru uczącego (razem 500), a nie podział uczący/testowy. To, że zbiór testowy też ma 183 wiersze, jest przypadkiem.
 
-![Przepływ obliczeń w sieci: suma ważona, normalizacja, sigmoida, wyjście, błąd, predykcja](obrazy/siec-1-warstwa-propagacja.png)
+## 02. LDA na irysach
 
-*Pełna ścieżka obliczeń dla kilku rekordów: ważona suma trzech neuronów → normalizacja min-max → aktywacja sigmoidalna → warstwa wyjściowa → błąd kwadratowy → predykcja klasy → trafienie (0 = poprawnie).*
+Rzutuję cztery cechy na jedną oś tak, żeby gatunki rozjechały się jak najbardziej, i tnę dwoma progami. Progi to średnie ważone środków sąsiednich klas.
 
-![Wagi warstwy wyjściowej oraz podsumowanie: suma błędów, próg odcięcia i liczba pomyłek](obrazy/siec-1-warstwa-wagi-i-wynik.png)
+2 pomyłki na 150. Stosunek wariancji między/wewnątrz wyszedł 0,645 - obie wariancje liczę osobno, więc widać, skąd ta liczba.
 
-*Wagi warstwy wyjściowej i podsumowanie. `Suma błędów 199,853` dotyczy zbioru uczącego (500 rekordów), a `pomyłki 5` - wstrzymanego zbioru testowego (183 rekordy).*
+Liczone na tych samych danych, na których dobierałem wagi.
 
-> ⚠️ Liczby `317` i `183` w wierszu „liczba" to **liczebność klas 2 i 4 wewnątrz zbioru uczącego** (317 + 183 = 500), a nie podział na zbiór uczący i testowy. To, że zbiór testowy również liczy 183 rekordy, jest przypadkiem.
+![Wagi, progi i wariancje](obrazy/lda-iris-metryki.png)
 
-## 02 · Liniowa analiza dyskryminacyjna (Iris)
+## 03. k-średnich
 
-**Dane:** klasyczny zbiór Iris - 150 rekordów, 4 cechy, 3 gatunki po 50 rekordów.
+50 obiektów, 4 cechy dotyczące przestępczości i urbanizacji, wygląda na USArrests. Etykiety zamieniłem na `L1`-`L50`. k = 4.
 
-**Metoda:** dyskryminanta Fishera. Rzutowanie 4 cech na jedną oś, wagi dobrane tak, by maksymalizować stosunek wariancji międzygrupowej do wewnątrzgrupowej. Klasyfikacja przez dwa progi odcięcia, wyznaczone jako średnie ważone środków sąsiadujących klas.
+Każda iteracja to osobna zakładka, `k1` do `k6`. Odległości przez `SQRT`, przypisanie przez `INDEX`+`MATCH`+`MIN`, nowe centroidy przez `AVERAGEIFS`.
 
-**Wynik:** 2 błędy na 150 rekordów. Stosunek wariancji między/wewnątrz = **0,645** - arkusz liczy obie wariancje osobno, więc widać, skąd ta liczba się bierze.
+Kolumna „różnica" liczy, ile obiektów zmieniło skupienie względem poprzedniej iteracji: 4, 4, 2, 0, 0. Piąta iteracja to koniec, szósta tylko to potwierdza.
 
-**Ograniczenie:** ocena na danych uczących, bez walidacji krzyżowej.
+![Piąta iteracja](obrazy/k-srednich-zbieznosc.png)
 
-![Wagi dyskryminanty, progi odcięcia i rozbicie wariancji na międzygrupową i wewnątrzgrupową](obrazy/lda-iris-metryki.png)
+Po lewej centroidy, po prawej odległości i przypisania. `Konwergencja = 0` znaczy, że nikt już nie zmienił skupienia.
 
-*Wagi dyskryminanty, średnie rzutowania w każdej klasie, progi odcięcia oraz rozbicie wariancji: międzygrupowa 0,522, wewnątrzgrupowa 0,808, stosunek **0,645**. `Różnica = 2` to liczba błędnych klasyfikacji na 150 rekordów.*
+## 04. Sieć z dwiema warstwami ukrytymi
 
-## 03 · Grupowanie metodą k-średnich
+172 rekordy, 4 zmienne, 3 klasy oznaczone 39, 69 i 84. Nie odtworzyłem, skąd są te dane. Zakresy: x1 od 26,3 do 60,4, x2 od -9,3 do -3,3, x3 od -4,7 do -0,4, x4 od 3 do 9.
 
-**Dane:** 50 obiektów, 4 cechy dotyczące przestępczości i urbanizacji. Charakterystyka odpowiada zbiorowi *USArrests* (stany USA); etykiety zanonimizowano do `L1`-`L50`.
+4 wejścia, dwie warstwy po 3 neurony, sigmoida po obu. Sieć uczona jak regresja na wartościach klas, wynik progowany na trzy przedziały.
 
-**Metoda:** algorytm Lloyda dla k = 4, wykonany ręcznie. **Każda iteracja to osobny arkusz** (`k1`…`k6`) - widać w nich pełny cykl: liczenie odległości euklidesowych do każdego centroidu (`SQRT`), przypisanie do najbliższego (`INDEX`+`MATCH`+`MIN`), przeliczenie centroidów (`AVERAGEIFS`).
+48 pomyłek na 172, bez zbioru testowego.
 
-**Zbieżność:** kolumna „różnica" porównuje przypisanie z poprzednią iteracją. Liczba zmian: **4 → 4 → 2 → 0 → 0**. Algorytm ustabilizował się w piątej iteracji, szósta to potwierdzenie.
+Najbardziej rozbudowany arkusz z całej piątki i najsłabszy wynik. Z projektem 01 nie ma co porównywać, bo to inne dane i inne zadanie. Zostawiam, bo ciekawsza jest tu sama konstrukcja niż skuteczność.
 
-Ten projekt najlepiej pokazuje mechanikę algorytmu, bo nic nie dzieje się „w środku funkcji" - każdy krok iteracji jest osobną, widoczną tabelą.
+## 05. Regresja liniowa
 
-![Piąta iteracja k-średnich: centroidy, odległości, przypisania i zerowa suma różnic](obrazy/k-srednich-zbieznosc.png)
+Osiem obserwacji, jedna zmienna. Współczynniki wyprowadzone z równań normalnych i policzone z sum, bez gotowej funkcji regresji. Wyszło `y = 6,906x - 130,236`.
 
-*Iteracja piąta. Po lewej centroidy czterech skupień, po prawej odległości każdego obiektu do wszystkich centroidów i wynikające z nich przypisanie. Kolumna `różnica` porównuje przypisanie z poprzednią iteracją - **`Konwergencja = 0`** oznacza, że żaden z 50 obiektów nie zmienił skupienia i algorytm się zatrzymał.*
+Obok wrzuciłem `LINEST` dla porównania: błędy standardowe 1,592 i 52,642, R² = 0,758, F = 18,82 przy 6 stopniach swobody, suma kwadratów 1760,8 wyjaśniona i 561,3 resztowa.
 
-## 04 · Sieć neuronowa z dwiema warstwami ukrytymi
+Osiem punktów to za mało, żeby brać te przedziały na poważnie. Chodziło o wyprowadzenie i odczyt diagnostyki.
 
-**Dane:** 172 rekordy, 4 zmienne numeryczne, 3 klasy o etykietach liczbowych 39 / 69 / 84 (rozkład 42 / 53 / 77). Projekt studencki, **źródła zbioru nie udało się odtworzyć** - zakresy zmiennych: x1 ∈ [26,3; 60,4], x2 ∈ [-9,3; -3,3], x3 ∈ [-4,7; -0,4], x4 ∈ {3…9}.
+![Dane](obrazy/regresja-wykres.png)
 
-**Architektura:** 4 wejścia → 3 neurony (warstwa 1) → 3 neurony (warstwa 2) → 1 wyjście. Sigmoida po obu warstwach, agregacja przez `SUMPRODUCT`/`INDEX`, wyjście przez `MMULT`. Sieć uczona jak regresja na wartościach klas, a wynik progowany na trzy przedziały.
+![Współczynniki i LINEST](obrazy/regresja-linest.png)
 
-**Wynik:** 48 błędów na 172 rekordy (72,1%), bez podziału na zbiór uczący i testowy.
+## Dane i uwagi
 
-**Uczciwie:** to najbardziej rozbudowana implementacja w całym zestawie i najsłabszy rezultat. Wynik nie jest porównywalny z projektem 01 - to inne dane i inne zadanie. Zostawiam go, bo sama konstrukcja dwuwarstwowej sieci w arkuszu jest tu ciekawsza niż jej skuteczność.
+Dane wejściowe wyeksportowałem do CSV w [`dane/`](dane), żeby dało się je obejrzeć bez Excela. Wszystko to publiczne zbiory wzorcowe albo dane poglądowe, nic osobowego ani firmowego.
 
-## 05 · Regresja liniowa
-
-**Dane:** 8 obserwacji, jedna zmienna objaśniająca (temperatura → sprzedaż). Dane poglądowe.
-
-**Metoda:** współczynniki wyprowadzone z równań normalnych metody najmniejszych kwadratów, policzone bezpośrednio z sum (`SUMPRODUCT`, `SUM`, `COUNT`) - bez użycia gotowej funkcji regresji. Wynik: `y = 6,906·x - 130,236`.
-
-**Diagnostyka:** obok, dla porównania, pełny blok `LINEST` - błędy standardowe współczynników (1,592 i 52,642), **R² = 0,758**, statystyka F = 18,82 przy 6 stopniach swobody, rozkład sumy kwadratów na wyjaśnioną (1760,8) i resztową (561,3).
-
-**Ograniczenie:** osiem punktów to zdecydowanie za mało, by traktować te przedziały ufności poważnie. Projekt pokazuje wyprowadzenie i odczyt diagnostyki, nie wnioskowanie.
-
-![Wykres punktowy ośmiu obserwacji: temperatura a sprzedaż](obrazy/regresja-wykres.png)
-
-*Osiem obserwacji - temperatura na osi poziomej, sprzedaż na pionowej.*
-
-![Sumy do równań normalnych, wyliczone współczynniki, predykcje oraz blok LINEST](obrazy/regresja-linest.png)
-
-*U góry sumy potrzebne do równań normalnych i wyliczone z nich współczynniki (`a = 6,906`, `b = -130,236`) wraz z trzema predykcjami. Na dole blok `LINEST` do porównania: błędy standardowe współczynników (1,592 i 52,642), **R² = 0,758**, statystyka F = 18,82 przy 6 stopniach swobody oraz rozkład sumy kwadratów na wyjaśnioną (1760,8) i resztową (561,3).*
+Arkusze zapisane razem z wynikami, więc widać je od razu po otwarciu. Wagi obu sieci dobierał Solver i jego ustawienia siedzą w plikach 01 i 04.
 
 ---
 
-## Dane źródłowe
+# ML in Excel, no libraries
 
-Katalog [`dane/`](dane) zawiera dane wejściowe wyeksportowane do CSV, żeby dało się je obejrzeć bez Excela i użyć do sprawdzenia wyników w dowolnym narzędziu.
+Five algorithms worked out with spreadsheet formulas. No Python, no sklearn, no `model.fit()`. Every step - forward pass, scaling, distances, line fitting - lives in a cell you can trace.
 
-Wszystkie zbiory są publicznymi zbiorami wzorcowymi albo danymi poglądowymi. Nie ma tu żadnych danych osobowych ani firmowych.
+University projects. I am putting them up because a spreadsheet leaves nowhere to hide behind a function call.
 
-## Uwagi techniczne
+| # | Project | Data | Result |
+|---|---|---|---|
+| [01](01-siec-1-warstwa) | Network, 1 hidden layer | 683 records, 9 features, 2 classes | 5 errors out of 183 held out (97.3%) |
+| [02](02-lda-iris) | LDA | Iris, 150 records | 2 errors out of 150 |
+| [03](03-k-srednich) | K-means | 50 objects, 4 features | converged after 5 iterations |
+| [04](04-siec-2-warstwy) | Network, 2 hidden layers | 172 records, 3 classes | 48 errors out of 172 |
+| [05](05-regresja-liniowa) | Linear regression | 8 points | R² = 0.758 |
 
-Arkusze zapisano razem z wynikami, więc widać je od razu po otwarciu - nie trzeba niczego przeliczać.
+Only project 01 has a held-out test set. It was fitted on 500 rows, and the 97.3% comes from 183 rows the optimisation never touched. The rest report accuracy on the data they were fitted on, so those numbers are inflated. I left them as they were - today I would split the data everywhere.
 
-Wagi obu sieci neuronowych (projekty 01 i 04) dopasowano dodatkiem **Solver**; jego ustawienia są nadal zapisane w tych plikach. Pozostałe projekty liczą się wprost z formuł.
+Project 03 is the one worth opening. Each iteration of k-means sits on its own worksheet, so distances, reassignment, centroid update and the convergence check are all visible tables instead of a loop inside a function. Project 04 is the biggest build and the worst score, and its dataset source is lost, so it is not comparable to 01.
 
----
-
-# Machine learning from scratch in Excel
-
-Five machine learning algorithms implemented **using spreadsheet formulas only** - no Python, no libraries, no `model.fit()`. Forward propagation, normalisation, Euclidean distance, least-squares fitting - every step is visible in a cell and can be traced.
-
-These are university projects. I am publishing them because they show something a notebook calling `sklearn` cannot: **that I understand what these algorithms actually compute.**
-
-| # | Project | Data | Method | Result |
-|---|---|---|---|---|
-| [01](01-siec-1-warstwa) | Neural network, 1 hidden layer | 683 records, 9 features, 2 classes | 3 neurons, sigmoid, min-max scaling | **97.3% on the test set** (5 errors / 183) |
-| [02](02-lda-iris) | Linear discriminant analysis | Iris - 150 records, 4 features, 3 classes | Fisher's LDA | 98.7% (2 errors / 150) |
-| [03](03-k-srednich) | K-means clustering | 50 objects, 4 features | k = 4, Lloyd's iterations | converged at iteration 5 |
-| [04](04-siec-2-warstwy) | Neural network, 2 hidden layers | 172 records, 4 features, 3 classes | 3 + 3 neurons, sigmoid | 72.1% (48 errors / 172) |
-| [05](05-regresja-liniowa) | Linear regression | 8 points, 1 predictor | OLS from formulas + diagnostics | R² = 0.758 |
-
-**How to read these numbers.** Only project 01 uses a genuine train/test split: the model was fitted on 500 records, and 97.3% is measured on 183 records the optimisation never saw. Projects 02, 04 and 05 report accuracy **on their own training data**, so those figures are optimistic and say nothing about generalisation. I left them as they were, with the caveat that today I would split the data before fitting in every one of them - as I did in project 01.
-
-Project 01 (single hidden layer, 9 inputs → 3 hidden neurons → 1 output, sigmoid activation, threshold from class-weighted means) is the strongest piece here, precisely because it is the only one that measures what matters. Project 03 is the most instructive: each iteration of Lloyd's algorithm lives on its own worksheet, so the whole loop - distances, reassignment, centroid update, convergence check - is laid out as visible tables rather than hidden inside a function call. Project 04 is the most elaborate construction and the weakest result; its dataset source could not be recovered, and its score is not comparable to project 01 since the task and data differ.
-
-Source data is exported to CSV in [`dane/`](dane). All datasets are public benchmark sets or illustrative data - no personal or company information.
+Source data is in [`dane/`](dane) as CSV. Public benchmark sets and illustrative data only.
