@@ -1,0 +1,6 @@
+# Arkusze to pliki binarne — git nie ma ich diffować ani próbować scalać.
+*.xlsx binary
+
+# Normalizacja końców linii w plikach tekstowych.
+*.md   text eol=lf
+*.csv  text eol=lf
