@@ -84,7 +84,9 @@ Wszystkie zbiory są publicznymi zbiorami wzorcowymi albo danymi poglądowymi. N
 
 ## Uwagi techniczne
 
-Arkusze zapisano z wynikami, więc widać je od razu po otwarciu. Formuły tablicowe (`MMULT`, `SUMPRODUCT` po zakresach) działają w Excelu i LibreOffice Calc. Dopasowanie parametrów sieci i wag dyskryminanty wykonano dodatkiem Solver.
+Arkusze zapisano razem z wynikami, więc widać je od razu po otwarciu — nie trzeba niczego przeliczać.
+
+Wagi obu sieci neuronowych (projekty 01 i 04) dopasowano dodatkiem **Solver**; jego ustawienia są nadal zapisane w tych plikach. Pozostałe projekty liczą się wprost z formuł.
 
 ---
 
